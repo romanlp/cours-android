@@ -19,7 +19,7 @@ import retrofit.Response;
 import retrofit.Retrofit;
 import timber.log.Timber;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements BookFragmentEvent{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,4 +34,24 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onBookSelected(Book book) {
+        DetailsBookFragment newFragment = new DetailsBookFragment();
+        Bundle args = new Bundle();
+        args.putParcelable("BOOK", book);
+        newFragment.setArguments(args);
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, newFragment)
+                .addToBackStack(ListBookFragment.class.getSimpleName())
+                .commit();
+    }
+
+
+
+}
+
+interface BookFragmentEvent {
+
+    public void onBookSelected(Book book);
 }

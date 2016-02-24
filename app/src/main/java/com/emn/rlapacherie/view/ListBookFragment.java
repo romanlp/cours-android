@@ -1,14 +1,19 @@
 package com.emn.rlapacherie.view;
 
+import android.content.Context;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.emn.rlapacherie.R;
 import com.emn.rlapacherie.model.Book;
@@ -30,13 +35,21 @@ import timber.log.Timber;
  */
 public class ListBookFragment extends Fragment {
 
-    private static final Random RANDOM = new Random();
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
     private List<Book> books;
+    private BookFragmentEvent listener;
+
     public ListBookFragment() {
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        // cast context to listener
+        listener = (BookFragmentEvent) context;
     }
 
     @Override
@@ -55,13 +68,44 @@ public class ListBookFragment extends Fragment {
 
         // use a linear layout manager
         //mLayoutManager = new LinearLayoutManager(this);
-        mLayoutManager = new LinearLayoutManager(getContext());
-        mRecyclerView.setLayoutManager(mLayoutManager);
+        final LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+        layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        mRecyclerView.setLayoutManager(layoutManager);
 
         // specify an adapter (see also next example)
         mAdapter = new BookRecycledAdapter(books);
         mRecyclerView.setAdapter(mAdapter);
 
+        final GestureDetector mGestureDetector = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener() {
+
+            @Override public boolean onSingleTapUp(MotionEvent e) {
+                return true;
+            }
+
+        });
+
+        mRecyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
+            @Override
+            public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
+                View child = mRecyclerView.findChildViewUnder(e.getX(),e.getY());
+                if(child!=null && mGestureDetector.onTouchEvent(e)){
+                    Book b = books.get(mRecyclerView.getChildAdapterPosition(child));
+                    listener.onBookSelected(b);
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
+            public void onTouchEvent(RecyclerView rv, MotionEvent e) {
+
+            }
+
+            @Override
+            public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+
+            }
+        });
         return view;
     }
 
@@ -70,19 +114,15 @@ public class ListBookFragment extends Fragment {
         // Plant logger cf. Android Timber
         Timber.plant(new Timber.DebugTree());
 
-        // TODO build Retrofit
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("http://henri-potier.xebia.fr/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        // TODO create a service
         BookService service = retrofit.create(BookService.class);
 
-        // TODO listBooks()
         Call<List<Book>> call = service.listBooks();
 
-        // TODO enqueue call and display book title
         call.enqueue(new Callback<List<Book>>() {
             @Override
             public void onResponse(Response<List<Book>> response, Retrofit retrofit) {
@@ -91,10 +131,10 @@ public class ListBookFragment extends Fragment {
                     Timber.i("Book : " + b.getTitle());
                     books.add(b);
                 }
+                mAdapter.notifyDataSetChanged();
             }
             @Override
             public void onFailure(Throwable t) {
-                // TODO error occurred
                 Timber.e(t, "Failure !");
             }
         });

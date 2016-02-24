@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.emn.rlapacherie.R;
@@ -20,7 +21,7 @@ public class BookRecycledAdapter extends RecyclerView.Adapter<BookRecycledAdapte
 
     private List<Book> books;
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
         public TextView name;
         public ImageView image;
@@ -36,7 +37,7 @@ public class BookRecycledAdapter extends RecyclerView.Adapter<BookRecycledAdapte
     }
 
     @Override
-    public BookRecycledAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public BookRecycledAdapter.ViewHolder onCreateViewHolder(final ViewGroup parent, int viewType) {
         // create a new view
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.fragment_book_list_item, parent, false);
